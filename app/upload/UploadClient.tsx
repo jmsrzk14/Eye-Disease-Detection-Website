@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -34,7 +34,11 @@ interface UploadedFile {
   status?: 'pending' | 'analyzing' | 'completed' | 'error';
 }
 
-export default function UploadClient() {
+interface UploadClientProps {
+  initialShowResult: boolean;
+}
+
+export default function UploadClient({ initialShowResult }: UploadClientProps) {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -43,33 +47,29 @@ export default function UploadClient() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     const token = sessionStorage.getItem('token');
     const email = sessionStorage.getItem('userEmail') || 'user@example.com';
 
-    // if (!token) {
-    //   window.location.href = '/login';
-    // } else {
-    //   setIsAuthenticated(true);
-    //   setUserEmail(email);
-    // }
+    if (!token) {
+      window.location.href = '/login';
+      return;
+    }
+
+    setIsAuthenticated(true);
+    setUserEmail(email);
+
+    if (initialShowResult) {
+      console.log('Deteksi berhasil, URL menunjukkan hasil analisis tersedia.');
+    }
 
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
-
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
-  useEffect(() => {
-    const resultParam = searchParams.get('result');
-    if (resultParam === 'true') {
-      console.log('Deteksi berhasil, URL menunjukkan hasil analisis tersedia.');
-    }
-  }, [searchParams]);
+  }, [initialShowResult]);
 
   const handleLogout = () => {
     sessionStorage.clear();
@@ -169,8 +169,7 @@ export default function UploadClient() {
 
     const hasResult = updatedFiles.some(f => f.status === 'completed');
     if (hasResult) {
-      const newUrl = `${window.location.pathname}?result=true`;
-      router.push(newUrl, { scroll: false });
+      router.push('/uploadpage?result=true', { scroll: false });
     }
   };
 
@@ -277,11 +276,10 @@ export default function UploadClient() {
           <CardContent className="space-y-6">
             {/* Drag & Drop Area */}
             <div
-              className={`relative border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center transition-all duration-300 cursor-pointer ${
-                dragActive
+              className={`relative border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center transition-all duration-300 cursor-pointer ${dragActive
                   ? 'border-emerald-500 bg-emerald-50 scale-105 shadow-xl'
                   : 'border-gray-300 hover:border-emerald-400 hover:bg-emerald-50/30'
-              }`}
+                }`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
@@ -355,8 +353,8 @@ export default function UploadClient() {
                       <CardContent className="p-4 space-y-4">
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium text-gray-700">
-                            {file.file.name.length > 30 
-                              ? file.file.name.substring(0, 30) + '...' 
+                            {file.file.name.length > 30
+                              ? file.file.name.substring(0, 30) + '...'
                               : file.file.name}
                           </span>
                           {file.status === 'analyzing' && (
@@ -414,7 +412,7 @@ export default function UploadClient() {
                                         <span className="font-medium text-gray-700">{lbl.class}</span>
                                         <div className="flex items-center gap-2">
                                           <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                            <div 
+                                            <div
                                               className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
                                               style={{ width: `${lbl.percentage}%` }}
                                             ></div>
@@ -477,14 +475,14 @@ export default function UploadClient() {
               <p className="text-sm text-gray-600">Get results in seconds with our optimized AI model</p>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 shadow-lg">
             <CardContent className="p-6">
               <h4 className="font-semibold text-teal-800 mb-2">High Accuracy</h4>
               <p className="text-sm text-gray-600">95%+ accuracy rate validated by medical professionals</p>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-gradient-to-br from-cyan-50 to-blue-50 border border-cyan-200 shadow-lg">
             <CardContent className="p-6">
               <h4 className="font-semibold text-cyan-800 mb-2">Secure & Private</h4>
