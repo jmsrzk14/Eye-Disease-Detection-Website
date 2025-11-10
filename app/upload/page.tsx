@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import UploadPage from "../uploadpage/page";
+import UploadPage from "./upload";
 
 export default function Page() {
   return (
