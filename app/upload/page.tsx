@@ -1,10 +1,28 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, X, Activity, CheckCircle, FileImage, LogOut, User, Sparkles, TrendingUp, AlertCircle } from 'lucide-react';
+import {
+  Upload,
+  X,
+  Activity,
+  CheckCircle,
+  FileImage,
+  LogOut,
+  User,
+  Sparkles,
+  TrendingUp,
+  AlertCircle
+} from 'lucide-react';
 
 interface UploadedFile {
   file: File;
@@ -23,11 +41,13 @@ export default function UploadPage() {
   const [userEmail, setUserEmail] = useState('');
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  // Check authentication on mount
+  // ✅ Check authentication on mount
   useEffect(() => {
     const token = sessionStorage.getItem('token');
-    
+
     if (!token) {
       window.location.href = '/login';
     } else {
@@ -41,6 +61,14 @@ export default function UploadPage() {
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
+
+  // ✅ Optional: detect URL change (for result query)
+  useEffect(() => {
+    const resultParam = searchParams.get('result');
+    if (resultParam === 'true') {
+      console.log('✅ Deteksi berhasil, URL menunjukkan hasil analisis tersedia.');
+    }
+  }, [searchParams]);
 
   const handleLogout = () => {
     sessionStorage.clear();
@@ -69,7 +97,7 @@ export default function UploadPage() {
 
   const processFiles = (fileList: File[]) => {
     const imageFiles = fileList.filter(file => file.type.startsWith('image/'));
-    
+
     if (imageFiles.length === 0) {
       alert('Please select valid image files (JPG, PNG)');
       return;
@@ -77,12 +105,12 @@ export default function UploadPage() {
 
     imageFiles.forEach(file => {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         const newFile: UploadedFile = {
           file,
           preview: e.target?.result as string,
           id: Math.random().toString(36).substring(7),
-          status: 'pending',
+          status: 'pending'
         };
         setFiles(prev => [...prev, newFile]);
       };
@@ -98,9 +126,12 @@ export default function UploadPage() {
     setIsUploading(true);
 
     const updatedFiles = await Promise.all(
-      files.map(async (file) => {
-        // Update status to analyzing
-        setFiles(prev => prev.map(f => f.id === file.id ? { ...f, status: 'analyzing' as const } : f));
+      files.map(async file => {
+        setFiles(prev =>
+          prev.map(f =>
+            f.id === file.id ? { ...f, status: 'analyzing' as const } : f
+          )
+        );
 
         const formData = new FormData();
         formData.append('file', file.file);
@@ -110,8 +141,8 @@ export default function UploadPage() {
             method: 'POST',
             body: formData,
             headers: {
-              'Authorization': `Bearer ${sessionStorage.getItem('authToken')}`,
-            },
+              Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+            }
           });
 
           if (!res.ok) throw new Error('Upload failed');
@@ -121,7 +152,7 @@ export default function UploadPage() {
             ...file,
             result: `data:image/png;base64,${data.overlay}`,
             detectedLabels: data.detected_labels,
-            status: 'completed' as const,
+            status: 'completed' as const
           };
         } catch (err) {
           console.error('Error:', err);
@@ -132,6 +163,13 @@ export default function UploadPage() {
 
     setFiles(updatedFiles);
     setIsUploading(false);
+
+    // ✅ Ubah URL tanpa reload halaman
+    const hasResult = updatedFiles.some(f => f.status === 'completed');
+    if (hasResult) {
+      const newUrl = `${window.location.pathname}?result=true`;
+      router.push(newUrl, { scroll: false });
+    }
   };
 
   if (!isAuthenticated) {
@@ -149,7 +187,7 @@ export default function UploadPage() {
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 overflow-hidden relative">
       {/* Animated gradient orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div 
+        <div
           className="absolute w-96 h-96 bg-gradient-to-r from-emerald-400/20 to-teal-400/20 rounded-full blur-3xl animate-pulse"
           style={{
             top: '10%',
@@ -157,7 +195,7 @@ export default function UploadPage() {
             transform: `translate(${mousePosition.x * 0.015}px, ${mousePosition.y * 0.015}px)`
           }}
         ></div>
-        <div 
+        <div
           className="absolute w-80 h-80 bg-gradient-to-r from-cyan-400/20 to-blue-400/20 rounded-full blur-3xl animate-pulse"
           style={{
             bottom: '10%',
@@ -183,11 +221,13 @@ export default function UploadPage() {
                 <p className="text-xs text-gray-500">AI-Powered Analysis</p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <div className="hidden sm:flex items-center space-x-2 bg-emerald-50 px-4 py-2 rounded-full">
                 <User className="w-4 h-4 text-emerald-600" />
-                <span className="text-sm font-medium text-emerald-700">{userEmail}</span>
+                <span className="text-sm font-medium text-emerald-700">
+                  {userEmail}
+                </span>
               </div>
               <Button
                 onClick={handleLogout}
@@ -202,19 +242,23 @@ export default function UploadPage() {
         </div>
       </nav>
 
+      {/* Content */}
       <div className="relative z-10 max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
         {/* Header */}
         <div className="text-center space-y-4 pt-8">
           <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-md rounded-full px-4 py-2 shadow-lg border border-white/20 mb-4">
             <Sparkles className="w-4 h-4 text-emerald-600 animate-pulse" />
-            <span className="text-sm font-semibold text-emerald-700">U-Net ResNet18 Model</span>
+            <span className="text-sm font-semibold text-emerald-700">
+              U-Net ResNet18 Model
+            </span>
           </div>
-          
+
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">
             Retina Image Analyzer
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed px-4">
-            Upload fundus images to detect eye diseases using advanced deep learning technology
+            Upload fundus images to detect eye diseases using advanced deep
+            learning technology
           </p>
         </div>
 

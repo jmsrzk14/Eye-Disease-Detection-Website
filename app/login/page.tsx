@@ -36,7 +36,6 @@ export default function LoginPage() {
     setSuccess(false);
 
     try {
-      // Replace with your actual API endpoint
       const response = await fetch('http://localhost:9090/api/auth/login', {
         method: 'POST',
         headers: {
@@ -67,7 +66,7 @@ export default function LoginPage() {
       }, 1500);
 
     } catch (err) {
-      setError('Username or password is incorrect');
+      setError('Username or password salah');
     } finally {
       setIsLoading(false);
     }
