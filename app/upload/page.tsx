@@ -1,15 +1,21 @@
 'use client';
 
-import { Suspense } from "react";
-import UploadPage from "./UploadPage";
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
+
+const UploadClient = dynamic(() => import('./UploadPage'), {
+  ssr: false,
+  loading: () => <div>Loading upload page...</div>,
+});
 
 export default function Page() {
   return (
     <Suspense fallback={<div>Loading upload page...</div>}>
-      <UploadPage />
+      <UploadClient />
     </Suspense>
   );
 }
+
 
 // 'use client';
 
