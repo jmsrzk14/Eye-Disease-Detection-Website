@@ -44,15 +44,14 @@ export default function UploadPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // ✅ Check authentication on mount
   useEffect(() => {
     const token = sessionStorage.getItem('token');
 
-    if (!token) {
-      window.location.href = '/login';
-    } else {
-      setIsAuthenticated(true);
-    }
+    // if (!token) {
+    //   window.location.href = '/login';
+    // } else {
+    //   setIsAuthenticated(true);
+    // }
 
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
@@ -62,7 +61,6 @@ export default function UploadPage() {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // ✅ Optional: detect URL change (for result query)
   useEffect(() => {
     const resultParam = searchParams.get('result');
     if (resultParam === 'true') {
@@ -164,7 +162,6 @@ export default function UploadPage() {
     setFiles(updatedFiles);
     setIsUploading(false);
 
-    // ✅ Ubah URL tanpa reload halaman
     const hasResult = updatedFiles.some(f => f.status === 'completed');
     if (hasResult) {
       const newUrl = `${window.location.pathname}?result=true`;
